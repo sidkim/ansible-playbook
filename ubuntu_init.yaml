@@ -1,0 +1,140 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+  vars:
+    my_user_name: "ubuntu"
+    user_home: "/home/{{ my_user_name }}"
+  user: "{{ my_user_name }}"
+  tasks:
+    - name: git-clone dracula-vim
+      ansible.builtin.git:
+        repo: "https://github.com/dracula/vim.git"
+        dest: "{{ user_home }}/.vim"
+        version: master
+
+    - name: config-vim config
+      copy:
+        dest: "{{ user_home }}/.vim/vimrc"
+        content: |
+          syntax on
+          colo dracula
+          set showmode
+          set hlsearch
+          set tabstop=4
+          set expandtab
+          set paste
+
+    - name: config-bash profile
+      ansible.builtin.blockinfile:
+        path: "{{ user_home }}/.bashrc"
+        block: |
+          export LANG="en_US.UTF-8"
+          export LC_ALL="en_US.UTF-8"
+          export TERM="xterm-256color"
+          export LANGUAGE="en"
+          alias grep='grep -i --color=auto'
+          alias ll='ls -alh --color=auto'
+          alias mkdir='mkdir -p'
+          alias mv='mv -i'
+          alias rm='rm -i'
+          alias cp='cp -i'
+
+- hosts: localhost
+  connection: local
+  become: true
+  vars:
+    my_user_name: "root"
+    user_home: "/root"
+  user: "{{ my_user_name }}"
+
+  tasks:
+    - name: print os family
+      ansible.builtin.debug:
+        msg: "{{ ansible_os_family }}"
+
+    - name: apt-update
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+      when: ansible_os_family == 'Debian' # or 'RedHat' for Amazon Linux
+
+    - name: apt-upgrade
+      apt: upgrade=safe force_apt_get=yes
+      when: ansible_os_family == 'Debian'
+
+    - name: install-packages
+      apt:
+        name:
+          - net-tools
+          - python3
+          - python3-pip
+          - apt-transport-https
+          - zsh
+          - vim
+        state: latest
+      when: ansible_os_family == 'Debian'
+
+    - name: config-network tuning conf
+      copy:
+        dest: "/etc/sysctl.d/90-network-custom.conf"
+        content: |
+          net.ipv4.tcp_window_scaling=1
+          net.core.rmem_default=253952
+          net.core.wmem_default=253952
+          net.core.rmem_max=16777216
+          net.core.wmem_max=16777216
+          net.ipv4.tcp_rmem=253952 253952 16777216
+          net.ipv4.tcp_wmem=253952 253952 16777216
+          net.ipv6.conf.all.disable_ipv6=1
+          net.ipv6.conf.default.disable_ipv6=1
+          net.ipv6.conf.lo.disable_ipv6=1
+          net.core.default_qdisc=fq
+          net.ipv4.tcp_congestion_control=bbr
+          net.ipv4.tcp_fastopen=3
+
+    - name: git-clone dracula-vim
+      ansible.builtin.git:
+        repo: "https://github.com/dracula/vim.git"
+        dest: "{{ user_home }}/.vim"
+        version: master
+
+    - name: config-vim config
+      copy:
+        dest: "{{ user_home }}/.vim/vimrc"
+        content: |
+          syntax on
+          colo dracula
+          set showmode
+          set hlsearch
+          set tabstop=4
+          set expandtab
+          set paste
+
+    - name: install-pip modules
+      pip:
+        name:
+          - black
+          - loguru
+          - virtualenv
+          - requests
+      when: ansible_os_family == 'Debian'
+
+    - name: config-bash profile
+      ansible.builtin.blockinfile:
+        path: "{{ user_home }}/.bashrc"
+        block: |
+          export LANG="en_US.UTF-8"
+          export LC_ALL="en_US.UTF-8"
+          export TERM="xterm-256color"
+          export LANGUAGE="en"
+          alias grep='grep -i --color=auto'
+          alias ll='ls -alh --color=auto'
+          alias mkdir='mkdir -p'
+          alias mv='mv -i'
+          alias rm='rm -i'
+          alias cp='cp -i'
+
+    - name: Restart server
+      command: /sbin/shutdown -r +3
+      async: 0
+      poll: 0
+      ignore_errors: true
