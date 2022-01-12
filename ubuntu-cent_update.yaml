@@ -5,28 +5,28 @@
   connection: local
   tasks:
     - name: Update apt repo and cache on Debian/Ubuntu
-      apt: 
-        update_cache: yes 
-        cache_valid_time: 3600 
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
         force_apt_get: yes
-      when: ansible_os_family == 'Debian' # or 'RedHat' for Amazon Linux
+      when: ansible_os_family == 'Debian'
 
     - name: Upgrade all packages on Debian/Ubuntu
-      apt: 
-        upgrade: safe 
-        autoremove: yes 
+      apt:
+        upgrade: safe
+        autoremove: yes
         force_apt_get: yes
-      when: ansible_os_family == 'Debian' # or 'RedHat' for Amazon Linux
+      when: ansible_os_family == 'Debian'
 
     - name: Upgrade all packages on RedHat
       yum:
-        name: '*'
+        name: "*"
         state: latest
       when: ansible_os_family == 'RedHat'
 
-#    - name: Check if a reboot is needed on all servers
-#      register: reboot_required_file
-#      stat: path=/var/run/reboot-required get_md5=no
+    # - name: Check if a reboot is needed on all servers
+    #   register: reboot_required_file
+    #   stat: path=/var/run/reboot-required get_md5=no
 
     - name: install-packages
       apt:
@@ -45,7 +45,7 @@
       when: ansible_os_family == 'RedHat'
 
     - name: Restart server
-      command: /sbin/shutdown -r +1
+      command: /sbin/shutdown -r +2
       async: 0
       poll: 0
       ignore_errors: true
