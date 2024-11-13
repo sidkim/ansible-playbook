@@ -121,14 +121,14 @@
           set expandtab
           set paste
 
-    - name: install-pip modules
-      pip:
-        name:
-          - black
-          - loguru
-          - virtualenv
-          - requests
-      when: ansible_os_family == 'Debian'
+    #- name: install-pip modules
+    #  pip:
+    #    name:
+    #      - black
+    #      - loguru
+    #      - virtualenv
+    #      - requests
+    #  when: ansible_os_family == 'Debian'
 
     - name: config-bash profile
       ansible.builtin.blockinfile:
